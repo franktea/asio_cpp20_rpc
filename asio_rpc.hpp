@@ -119,7 +119,7 @@ private:
                 co_await asio::async_write(socket, asio::buffer(buff), asio::use_awaitable);
             }
         } catch (std::exception& e) {
-            std::cout<<"exception: "<<e.what()<<"\n";
+            std::cout<<"rpc exception: "<<e.what()<<"\n";
         }
     }
 private:

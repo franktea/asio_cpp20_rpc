@@ -7,7 +7,7 @@ add_compile_options(-std=c++2b -fcoroutines-ts)
 include(FetchContent)
 FetchContent_Declare(asio
   GIT_REPOSITORY    https://github.com/chriskohlhoff/asio.git
-  GIT_TAG asio-1-22-0
+  GIT_TAG master
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
 )
