@@ -80,9 +80,47 @@ private:
 };
 
 class Server {
+public:
     Server(asio::io_context& ioc): ioc_(ioc) {}
     void Run() {
+        try {
+            asio::signal_set signals(ioc_, SIGINT, SIGTERM);
+            signals.async_wait([&](auto, auto){ ioc_.stop(); });
+            asio::co_spawn(ioc_, Listen(ioc_), asio::detached);
+            ioc_.run();
+        } catch (std::exception& e) {
+            std::cout<<"except in Run: "<<e.what()<<"\n";
+        }
+    }
+private:
+    asio::awaitable<void> Listen(asio::io_context& ioc) {
+        asio::ip::tcp::acceptor acceptor(ioc, {asio::ip::tcp::v4(), 5555});
+        for(;;) {
+            std::cout<<"listen...\n";
+            asio::ip::tcp::socket socket = co_await acceptor.async_accept(asio::use_awaitable);
+            asio::co_spawn(ioc, Rpc(std::move(socket)), asio::detached);
+        }
+    }
 
+    asio::awaitable<void> Rpc(asio::ip::tcp::socket socket) {
+        std::vector<uint8_t> buff;
+        try {
+            for(;;) {
+                size_t len;
+                co_await asio::async_read(socket, asio::buffer(&len, sizeof(size_t)), asio::use_awaitable);
+                buff.resize(len);
+                co_await asio::async_read(socket, asio::buffer(buff), asio::use_awaitable);
+                msgpack::Unpacker unpacker(&buff[0], buff.size());
+                std::string function_name;
+                unpacker(function_name);
+                buff = functions[function_name](unpacker);
+                len = buff.size();
+                co_await asio::async_write(socket, asio::buffer(&len, sizeof(len)), asio::use_awaitable);
+                co_await asio::async_write(socket, asio::buffer(buff), asio::use_awaitable);
+            }
+        } catch (std::exception& e) {
+            std::cout<<"exception: "<<e.what()<<"\n";
+        }
     }
 private:
     asio::io_context& ioc_;

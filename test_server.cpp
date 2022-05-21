@@ -37,13 +37,8 @@ int test_function(int a, int b) { return a + b; }
 
 int main() {
     register_function("test_function", test_function);
-    try {
-        asio::io_context io_context(1 );
-        asio::signal_set signals(io_context, SIGINT, SIGTERM);
-        signals.async_wait([&](auto, auto){ io_context.stop(); });
-        asio::co_spawn(io_context, Listen(io_context), asio::detached);
-        io_context.run();
-    } catch (std::exception& e) {
-        std::cout<<"except in main: "<<e.what()<<"\n";
-    }
+    
+    asio::io_context ioc;
+    Server server(ioc);
+    server.Run();
 }

@@ -23,7 +23,5 @@ FetchContent_Declare(cppack
 FetchContent_Populate(cppack)
 include_directories(${cppack_SOURCE_DIR}/msgpack/include/)
 
-add_executable(asio_rpc_test test_main.cpp)
 add_executable(asio_rpc_client test_client.cpp)
 add_executable(asio_rpc_server test_server.cpp)
-add_executable(test_tcp test_tcp.cpp)
